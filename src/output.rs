@@ -1,15 +1,51 @@
 //! Output formatting utilities
+//!
+//! This module provides functions for formatting tool output with line numbers
+//! and truncating large outputs to prevent memory exhaustion.
 
 use crate::constants::{MAX_LINE_LENGTH, MAX_OUTPUT_SIZE};
 
 /// Format content with line numbers
 ///
+/// Adds line numbers to each line of content, similar to `cat -n`.
+/// Lines longer than [`MAX_LINE_LENGTH`] are truncated with "..." appended.
+///
 /// # Arguments
+///
 /// * `content` - The content to format
 /// * `offset` - Starting line number (0-indexed)
 ///
 /// # Returns
-/// Content with line numbers prefixed to each line
+///
+/// Content with line numbers prefixed to each line, formatted as:
+/// ```text
+/// 1	first line
+/// 2	second line
+/// 3	third line
+/// ```
+///
+/// # Examples
+///
+/// ```rust
+/// use a3s_tools_core::format_line_numbered;
+///
+/// let content = "line1\nline2\nline3";
+/// let formatted = format_line_numbered(content, 0);
+/// assert!(formatted.contains("1\tline1"));
+/// assert!(formatted.contains("2\tline2"));
+/// assert!(formatted.contains("3\tline3"));
+/// ```
+///
+/// With offset:
+///
+/// ```rust
+/// use a3s_tools_core::format_line_numbered;
+///
+/// let content = "line1\nline2";
+/// let formatted = format_line_numbered(content, 10);
+/// assert!(formatted.contains("11\tline1"));
+/// assert!(formatted.contains("12\tline2"));
+/// ```
 pub fn format_line_numbered(content: &str, offset: usize) -> String {
     let lines: Vec<&str> = content.lines().collect();
     let total_lines = offset + lines.len();
@@ -33,11 +69,40 @@ pub fn format_line_numbered(content: &str, offset: usize) -> String {
 
 /// Truncate output if it exceeds maximum size
 ///
+/// Prevents memory exhaustion by limiting output size to [`MAX_OUTPUT_SIZE`].
+/// If the output exceeds this limit, it's truncated with a message indicating
+/// the total size and how much was shown.
+///
 /// # Arguments
+///
 /// * `output` - The output to potentially truncate
 ///
 /// # Returns
-/// The output, truncated with a message if it exceeded MAX_OUTPUT_SIZE
+///
+/// The output, truncated with a message if it exceeded [`MAX_OUTPUT_SIZE`]
+///
+/// # Examples
+///
+/// Small output (no truncation):
+///
+/// ```rust
+/// use a3s_tools_core::truncate_output;
+///
+/// let small = "hello world";
+/// let result = truncate_output(small);
+/// assert_eq!(result, small);
+/// ```
+///
+/// Large output (truncated):
+///
+/// ```rust
+/// use a3s_tools_core::truncate_output;
+///
+/// let large = "x".repeat(200_000);
+/// let result = truncate_output(&large);
+/// assert!(result.len() < large.len());
+/// assert!(result.contains("[Output truncated:"));
+/// ```
 pub fn truncate_output(output: &str) -> String {
     if output.len() > MAX_OUTPUT_SIZE {
         let truncated = &output[..MAX_OUTPUT_SIZE];

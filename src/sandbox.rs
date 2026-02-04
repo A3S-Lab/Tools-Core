@@ -1,23 +1,82 @@
 //! Sandbox path resolution and validation
 //!
-//! Ensures all file operations stay within the workspace boundary.
+//! This module ensures all file operations stay within the workspace boundary.
+//! It provides two main functions for path resolution with different semantics:
+//!
+//! - [`resolve_path`] - For reading existing files (requires file to exist)
+//! - [`resolve_path_for_write`] - For writing files (allows non-existent files)
+//!
+//! # Security
+//!
+//! Both functions enforce workspace boundaries by:
+//! - Canonicalizing paths to resolve symlinks and `..` components
+//! - Verifying the resolved path is within the workspace
+//! - Rejecting paths that would escape the workspace
+//!
+//! # Examples
+//!
+//! ```rust
+//! use a3s_tools_core::{resolve_path, resolve_path_for_write};
+//! use std::path::Path;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let workspace = Path::new("/workspace");
+//!
+//! // For reading - file must exist
+//! // let path = resolve_path(workspace, "existing_file.txt")?;
+//!
+//! // For writing - file can be new
+//! let path = resolve_path_for_write(workspace, "new_file.txt")?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::ToolError;
 use std::path::{Path, PathBuf};
 
 /// Resolve a path relative to workspace, ensuring it stays within sandbox
 ///
+/// This function is used for read operations where the file must exist.
+/// It canonicalizes the path to handle symlinks and `..` components,
+/// then verifies the result is within the workspace boundary.
+///
 /// # Arguments
+///
 /// * `workspace` - The workspace root directory (sandbox boundary)
 /// * `path` - The path to resolve (can be relative or absolute)
 ///
 /// # Returns
-/// * `Ok(PathBuf)` - The resolved path within workspace
-/// * `Err(ToolError)` - If path is outside workspace or doesn't exist
+///
+/// * `Ok(PathBuf)` - The resolved canonical path within workspace
+/// * `Err(ToolError::PathNotFound)` - If the path doesn't exist
+/// * `Err(ToolError::PathOutsideWorkspace)` - If the path is outside workspace
 ///
 /// # Security
-/// This function canonicalizes paths to handle symlinks and `..` components,
-/// then verifies the result is within the workspace boundary.
+///
+/// This function canonicalizes paths to handle:
+/// - Symlinks (e.g., `/var` → `/private/var` on macOS)
+/// - Relative paths with `..` components
+/// - Absolute paths
+///
+/// After canonicalization, it verifies the path is within the workspace.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use a3s_tools_core::resolve_path;
+/// use std::path::Path;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let workspace = Path::new("/workspace");
+///
+/// // Resolve relative path
+/// let path = resolve_path(workspace, "src/main.rs")?;
+///
+/// // Resolve absolute path (must be within workspace)
+/// let path = resolve_path(workspace, "/workspace/config.json")?;
+/// # Ok(())
+/// # }
+/// ```
 pub fn resolve_path(workspace: &Path, path: &str) -> Result<PathBuf, ToolError> {
     let path = Path::new(path);
 
@@ -47,17 +106,44 @@ pub fn resolve_path(workspace: &Path, path: &str) -> Result<PathBuf, ToolError> 
 
 /// Resolve a path for write operations (allows non-existent files)
 ///
+/// This function is used for write operations where the file may not exist yet.
+/// Unlike [`resolve_path`], it doesn't require the file to exist, but still
+/// ensures the path would be within the workspace boundary.
+///
 /// # Arguments
+///
 /// * `workspace` - The workspace root directory (sandbox boundary)
 /// * `path` - The path to resolve (can be relative or absolute)
 ///
 /// # Returns
+///
 /// * `Ok(PathBuf)` - The resolved path within workspace
-/// * `Err(ToolError)` - If path would be outside workspace
+/// * `Err(ToolError::PathOutsideWorkspace)` - If the path would be outside workspace
 ///
 /// # Security
+///
 /// For write operations, we can't canonicalize non-existent paths.
 /// Instead, we verify the parent directory is within workspace.
+/// This prevents creating files outside the workspace boundary.
+///
+/// # Examples
+///
+/// ```rust
+/// use a3s_tools_core::resolve_path_for_write;
+/// use std::path::Path;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let workspace = Path::new("/workspace");
+///
+/// // Create new file in workspace
+/// let path = resolve_path_for_write(workspace, "output/new_file.txt")?;
+///
+/// // This would fail - escapes workspace
+/// let result = resolve_path_for_write(workspace, "../outside.txt");
+/// assert!(result.is_err());
+/// # Ok(())
+/// # }
+/// ```
 pub fn resolve_path_for_write(workspace: &Path, path: &str) -> Result<PathBuf, ToolError> {
     let path = Path::new(path);
 
