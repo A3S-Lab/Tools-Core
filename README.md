@@ -19,7 +19,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-a3s-tools-core = "0.1.1"
+a3s-tools-core = "0.1"
 ```
 
 ### Path Resolution
