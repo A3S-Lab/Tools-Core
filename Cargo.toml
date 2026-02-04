@@ -4,6 +4,12 @@ version = "0.1.0"
 edition = "2021"
 description = "Shared library for A3S tools - sandbox, constants, and utilities"
 license = "MIT"
+repository = "https://github.com/A3S-Lab/Tools-Core"
+homepage = "https://github.com/A3S-Lab/Tools-Core"
+documentation = "https://docs.rs/a3s-tools-core"
+readme = "README.md"
+keywords = ["a3s", "tools", "sandbox", "cli"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 thiserror = "1.0"
