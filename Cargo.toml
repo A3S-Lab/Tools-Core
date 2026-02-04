@@ -1,6 +1,6 @@
 [package]
 name = "a3s-tools-core"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Shared library for A3S tools - sandbox, constants, and utilities"
 license = "MIT"
