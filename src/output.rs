@@ -19,9 +19,9 @@ use crate::constants::{MAX_LINE_LENGTH, MAX_OUTPUT_SIZE};
 ///
 /// Content with line numbers prefixed to each line, formatted as:
 /// ```text
-/// 1	first line
-/// 2	second line
-/// 3	third line
+/// 1    first line
+/// 2    second line
+/// 3    third line
 /// ```
 ///
 /// # Examples

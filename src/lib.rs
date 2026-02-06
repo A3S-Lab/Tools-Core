@@ -34,9 +34,9 @@
 //! let content = "line1\nline2\nline3";
 //! let formatted = format_line_numbered(content, 0);
 //! // Output:
-//! // 1	line1
-//! // 2	line2
-//! // 3	line3
+//! // 1    line1
+//! // 2    line2
+//! // 3    line3
 //!
 //! let large_output = "x".repeat(200_000);
 //! let truncated = truncate_output(&large_output);
