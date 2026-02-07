@@ -121,10 +121,7 @@ mod tests {
         assert_eq!(err.to_string(), "Path not found: /foo/bar");
 
         let err = ToolError::PathOutsideWorkspace("../etc/passwd".to_string());
-        assert_eq!(
-            err.to_string(),
-            "Path '../etc/passwd' is outside workspace"
-        );
+        assert_eq!(err.to_string(), "Path '../etc/passwd' is outside workspace");
 
         let err = ToolError::invalid_arg("file_path", "cannot be empty");
         assert_eq!(
